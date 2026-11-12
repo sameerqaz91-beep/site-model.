@@ -29,6 +29,7 @@ import {
   composeBody,
   composeMessage,
   describeRedactions,
+  describeUsage,
   draftPrompt,
   editedFiles,
   extractHandoffId,
@@ -88,6 +89,9 @@ const lastSentAtom = atom({ plugin: 'session-handoff', key: 'lastSent' } as cons
 })
 const inboxAtom = atom({ plugin: 'session-handoff', key: 'inbox' } as const, [], {
   shape: 'inbox-1',
+})
+const draftUsageAtom = atom({ plugin: 'session-handoff', key: 'draftUsage' } as const, null, {
+  shape: 'usage-1',
 })
 
 // ---------------------------------------------------------------------------
@@ -345,6 +349,17 @@ async function draftFromConversation($: EngineInterface): Promise<void> {
     const messages = await $.session.messages()
     const edited = Array.isArray(messages) ? editedFiles(messages, await $.session.cwd()) : []
     const forked = await $.model.fork({ prompt: draftPrompt(cfg.lang) })
+    // What the fork cost, as the API counted it; nothing to count when no request was made.
+    if ('usage' in forked) {
+      const usage = {
+        input: forked.usage.input_tokens,
+        cacheRead: forked.usage.cache_read_input_tokens,
+        cacheWrite: forked.usage.cache_creation_input_tokens,
+        output: forked.usage.output_tokens,
+        at: await $.clock.now(),
+      }
+      await update($, draftUsageAtom, () => usage)
+    }
     let patch: Partial<HandoffDraft> = {}
     let problem = ''
     if (!forked.isAnswered) {
@@ -504,7 +519,7 @@ export const register: Register = (on, options) => {
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Button, Code, Input, Text } = $.ui.resolve(e)
-    const [draft, picked, manual, candidates, review, status, busy, guard, inbox] = await Promise.all([
+    const [draft, picked, manual, candidates, review, status, busy, guard, inbox, draftUsage] = await Promise.all([
       read($, draftAtom),
       read($, recipientAtom),
       read($, manualAtom),
@@ -514,6 +529,7 @@ export const register: Register = (on, options) => {
       read($, busyAtom),
       read($, guardAtom),
       read($, inboxAtom),
+      read($, draftUsageAtom),
     ])
     const now = await $.clock.now()
     const chosen = recipientFromInput(manual) ?? picked
@@ -660,6 +676,11 @@ export const register: Register = (on, options) => {
           />
           <Button key="clear" label={t.clear} onPress={() => clearDraft($)} />
         </Box>
+        {draftUsage !== null && (
+          <Text dimColor dir={dir}>
+            {describeUsage(t.draftUsage, draftUsage)}
+          </Text>
+        )}
         {statusLine}
         {guardLine}
         {inboxView}

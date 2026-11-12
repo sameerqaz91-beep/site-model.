@@ -83,6 +83,7 @@ export type Strings = {
   draftFailed: string
   draftUnreadable: string
   draftNoEmpty: string
+  draftUsage: string
   review: string
   clear: string
   cleared: string
@@ -156,6 +157,8 @@ export const STRINGS: Readonly<Record<Lang, Strings>> = {
     draftFailed: 'تعذّرت الصياغة التلقائية ({reason})؛ املأ الحقول يدويًا.',
     draftUnreadable: 'تعذّرت قراءة المسودة المقترحة؛ املأ الحقول يدويًا.',
     draftNoEmpty: 'كل الحقول ممتلئة؛ امسح حقلًا لإعادة صياغته.',
+    draftUsage:
+      'استهلاك آخر صياغة: {total} رمزًا في المجموع: {input} إدخال جديد، و{cacheRead} قُرئت من الكاش، و{cacheWrite} كُتبت في الكاش، و{output} إخراج.',
     review: 'مراجعة الرسالة',
     clear: 'مسح الحقول',
     cleared: 'مُسحت الحقول.',
@@ -237,6 +240,8 @@ export const STRINGS: Readonly<Record<Lang, Strings>> = {
     draftFailed: 'Automatic drafting failed ({reason}); fill the fields by hand.',
     draftUnreadable: 'Could not read the proposed draft; fill the fields by hand.',
     draftNoEmpty: 'Every field is filled; clear a field to redraft it.',
+    draftUsage:
+      'Last draft used {total} tokens in all: {input} new input, {cacheRead} read from cache, {cacheWrite} written to cache, {output} output.',
     review: 'Review message',
     clear: 'Clear fields',
     cleared: 'Fields cleared.',
@@ -291,6 +296,27 @@ export function fill(template: string, values: Readonly<Record<string, string | 
 
 export function langOf(value: unknown): Lang {
   return value === 'en' ? 'en' : 'ar'
+}
+
+/** `12,345`: digits grouped by three, with no locale data to lean on. */
+export function formatCount(n: number): string {
+  return String(Math.max(0, Math.round(n))).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
+/** The usage line for the last draft, every count grouped. */
+export function describeUsage(
+  template: string,
+  usage: { input: number; cacheRead: number; cacheWrite: number; output: number },
+): string {
+  const total = usage.input + usage.cacheRead + usage.cacheWrite + usage.output
+
+  return fill(template, {
+    total: formatCount(total),
+    input: formatCount(usage.input),
+    cacheRead: formatCount(usage.cacheRead),
+    cacheWrite: formatCount(usage.cacheWrite),
+    output: formatCount(usage.output),
+  })
 }
 
 /** `YYYY-MM-DD HH:MM UTC`: the module has no locale data to lean on. */

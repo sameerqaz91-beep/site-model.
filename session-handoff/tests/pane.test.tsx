@@ -299,13 +299,18 @@ test('drafting asks a fork for the brief and takes the files from edit calls', {
       value: {
         isAnswered: true,
         text: '{"goal":"G","done":"D","decisions":"","files":"","next":"N","acceptance":"A"}',
-        usage: USAGE,
+        usage: { input_tokens: 1200, output_tokens: 350, cache_read_input_tokens: 48000, cache_creation_input_tokens: 0 },
       },
     }
   })
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Text', text: /Last draft used/ })).toBeUndefined()
   await ui.input({ key: 'field-done', text: 'typed by the person' })
   await ui.press({ key: 'draft' })
+
+  expect(
+    (await ui.find({ type: 'Text', text: /Last draft used/ }))?.text,
+  ).toBe('Last draft used 49,550 tokens in all: 1,200 new input, 48,000 read from cache, 0 written to cache, 350 output.')
 
   expect(asked).toHaveLength(1)
   expect(asked[0]).toContain('ONLY one JSON object')
@@ -325,6 +330,26 @@ test('with nothing to fork yet, drafting says so', { options: { language: 'en' }
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   await ui.press({ key: 'draft' })
   expect(await ui.find({ type: 'Text', text: /No conversation to draft from yet/ })).toBeDefined()
+  // No request was made, so there is nothing to count.
+  expect(await ui.find({ type: 'Text', text: /Last draft used/ })).toBeUndefined()
+})
+
+test('a draft that failed still says what it cost, in Arabic too', async ($, on) => {
+  engine(on)
+  on('session.cwd', () => ({ value: '/repo' }))
+  on('session.messages', () => ({ value: [] }))
+  on('model.fork', () => ({
+    value: {
+      isAnswered: false,
+      reason: 'aborted',
+      usage: { input_tokens: 10, output_tokens: 0, cache_read_input_tokens: 2500, cache_creation_input_tokens: 1000 },
+    },
+  }))
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'draft' })
+  expect((await ui.find({ type: 'Text', text: /استهلاك آخر صياغة/ }))?.text).toBe(
+    'استهلاك آخر صياغة: 3,510 رمزًا في المجموع: 10 إدخال جديد، و2,500 قُرئت من الكاش، و1,000 كُتبت في الكاش، و0 إخراج.',
+  )
 })
 
 test('/handoff opens the pane and lists the sessions', { options: { language: 'en' } }, async ($, on) => {

@@ -15,6 +15,7 @@ import {
   extractHandoffId,
   fillEmpty,
   fingerprint,
+  formatCount,
   handoffId,
   isGuardActive,
   isSentEntry,
@@ -292,6 +293,10 @@ test('the files come from the conversation’s edit calls alone', () => {
   ]
   expect(editedFiles(messages, '/repo')).toEqual(['src/a.ts', '/elsewhere/n.ipynb'])
   expect(editedFiles({ deny: 'no' }, '/repo')).toEqual([])
+})
+
+test('token counts are grouped by three', () => {
+  expect([0, 7, 999, 1000, 48000, 1234567].map(formatCount)).toEqual(['0', '7', '999', '1,000', '48,000', '1,234,567'])
 })
 
 test('the ledger drops what is old or malformed', () => {

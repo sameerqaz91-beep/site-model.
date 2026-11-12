@@ -55,6 +55,15 @@ export type HandoffSent = { id: string; at: number; label: string }
 
 export type HandoffInboxEntry = { id: string; at: number; preview: string }
 
+/** What the last «draft from conversation» cost, as the API counted it. */
+export type HandoffUsage = {
+  input: number
+  cacheRead: number
+  cacheWrite: number
+  output: number
+  at: number
+}
+
 declare module 'claude-code' {
   interface PluginState {
     'session-handoff': {
@@ -68,6 +77,7 @@ declare module 'claude-code' {
       guard: Shaped<HandoffGuard | null>
       lastSent: Shaped<HandoffSent | null>
       inbox: Shaped<HandoffInboxEntry[]>
+      draftUsage: Shaped<HandoffUsage | null>
     }
   }
 }
