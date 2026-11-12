@@ -1,0 +1,37 @@
+{
+  "name": "session-handoff",
+  "version": "0.1.0",
+  "description": "Hand work off to another Claude session: pick the receiving session, review a short six-part brief (goal, done, decisions, files, next step, acceptance criterion), then send it. Secrets redacted, duplicates and auto-reply loops blocked.",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Language",
+      "description": "Language of the pane and of the handoff message: ar (Arabic) or en (English).",
+      "default": "ar",
+      "options": ["ar", "en"]
+    },
+    "replyGuard": {
+      "type": "boolean",
+      "title": "Auto-reply guard",
+      "description": "Right after a handoff arrives (or a reply to one you sent), the main conversation's model may not send messages for a short while, so two sessions cannot answer each other in a loop.",
+      "default": true
+    },
+    "replyCooldownSeconds": {
+      "type": "number",
+      "title": "Auto-reply guard, seconds",
+      "description": "How long the auto-reply guard stands after a handoff, beyond the turn that reads it.",
+      "default": 120,
+      "min": 0,
+      "max": 3600
+    },
+    "maxHandoffsPerHour": {
+      "type": "number",
+      "title": "Handoffs per hour",
+      "description": "The most handoffs this machine sends in any hour.",
+      "default": 10,
+      "min": 1,
+      "max": 100
+    }
+  }
+}
