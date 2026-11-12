@@ -108,19 +108,37 @@ One-way handoff: continue the work here; do not reply to the sender with SendMes
 }
 ```
 
-إذا ثُبّت الـ Mod من سوق (marketplace)، فالمفتاح يكون `session-handoff@<marketplace>`. ويعرض `claude plugin configure <plugin>` الخيارات وقيمها.
+إذا ثبّتَّ الـ Mod من GitHub (القسم التالي)، فالمفتاح هو `session-handoff@site-model` بدل `session-handoff`. يمكنك ضبط الخيارات عند التثبيت (`--config language=en`)، ويعرضها لك `claude plugin configure session-handoff@site-model`. والخيار الذي لا تضبطه يأخذ قيمته الافتراضية.
 
-## التشغيل
+## التثبيت والتشغيل
 
-- **في جلسة Claude Code السحابية التي بُني فيها:** يُحمَّل من مجلد الـ Mods الخاص بها، وينتهي بانتهاء الحاوية.
-- **على جهازك، لجلسة واحدة:** انسخ المستودع، ثم:
+**التثبيت من GitHub:** المستودع عام، وفي جذره ملف `.claude-plugin/marketplace.json` يجعله سوقًا (marketplace) اسمه `site-model`. اكتب في جلسة Claude Code داخل الطرفية:
 
-  ```bash
-  claude --plugin-dir ./session-handoff
-  ```
+```text
+/plugin install session-handoff --marketplace sameerqaz91-beep/site-model.
+```
 
-  أو ضع المسار المطلق للمجلد في متغير البيئة `CLAUDE_CODE_PLUGIN_DIRS`، مثلًا في كتلة `env` داخل `~/.claude/settings.json`.
-- يجب أن يعمل الـ Mod في الجلستين معًا (المرسِلة والمستقبلة) لتعمل حمايات الاستقبال. وتعمل حماية المرسِل وحدها حتى لو لم يكن المستقبِل يشغّله.
+أو من سطر الأوامر:
+
+```bash
+claude plugin install session-handoff --marketplace sameerqaz91-beep/site-model.
+```
+
+انتبه إلى أن اسم المستودع ينتهي بنقطة: `site-model.`. أجب بـ `y` عن سؤال `Add marketplace?`، واضغط Enter لاختيار النطاق `user` (الأول في القائمة) فيعمل الـ Mod في كل جلساتك، ثم اضبط الخيارات أو اتركها على قيمها الافتراضية.
+
+أما في تطبيق سطح المكتب، حيث لا يعمل `/plugin`، فاضغط + بجانب مربع الكتابة، ثم Plugins، ثم Add marketplace واكتب `sameerqaz91-beep/site-model.`، ثم Add plugin.
+
+**لجلسة واحدة من نسخة محلية:** بعد نسخ المستودع شغّل:
+
+```bash
+claude --plugin-dir ./session-handoff
+```
+
+أو ضع المسار المطلق للمجلد في متغير البيئة `CLAUDE_CODE_PLUGIN_DIRS`، مثلًا في كتلة `env` داخل `~/.claude/settings.json`.
+
+**في جلسة Claude Code السحابية التي بُني فيها:** يُحمَّل من مجلد الـ Mods الخاص بها، وينتهي بانتهاء الحاوية.
+
+لتعمل حمايات الاستقبال يجب أن يعمل الـ Mod في الجلستين معًا (المرسِلة والمستقبلة). أما حماية المرسِل فتعمل وحدها حتى لو لم يكن المستقبِل يشغّله.
 
 ## الاختبارات
 
@@ -135,22 +153,24 @@ claude plugin test ./session-handoff
 - `tests/pane.test.tsx`: الرحلة الكاملة على أربعة أسطح (`terminal` و`desktop` و`vscode` و`mobile`): اختيار، مراجعة، إرسال مرة واحدة، رفض التكرار. وأيضًا: إعادة المحاولة بعد الفشل، والضغطتان المتزامنتان، والتكرار من جلسة أخرى بين المراجعة والإرسال، وتغيّر المسودة بعد المراجعة، والحد في الساعة، والشروط قبل المراجعة، والصياغة من المحادثة، والأمر `/handoff`، والعربية افتراضيًا.
 - `tests/guards.test.tsx`: إسقاط التسليم المكرر (ومنه المتزامن)، وحماية الرد الآلي ونهايتها، ومنع إعادة التوجيه، وإيقاف الحماية من الإعدادات، وتجاهل رسائل الوكلاء الفرعيين، وحماية المرسِل بعد رد آلي.
 
-وجُرّبت الاختبارات على 14 نسخة معطوبة عمدًا من الكود، تُبطل كل منها حماية واحدة (منع إعادة التوجيه، حماية الرد، الحجب، منع التكرار عند الإرسال والاستقبال، قفل الضغطة، الحد في الساعة، وغيرها)، وفشل اختبار واحد على الأقل في كل منها.
+وجُرّبت أوامر التثبيت والتعطيل وإعادة التفعيل والإزالة المذكورة في هذا الملف في إعدادات معزولة، ونجحت كلها.
+
+وجُرّبت الاختبارات أيضًا على 14 نسخة معطوبة عمدًا من الكود، تُبطل كل منها حماية واحدة (منع إعادة التوجيه، حماية الرد، الحجب، منع التكرار عند الإرسال والاستقبال، قفل الضغطة، الحد في الساعة، وغيرها)، وفشل اختبار واحد على الأقل في كل منها.
 
 ## طريقة تعطيل الـ Mod
 
 **تعطيل كامل، حسب طريقة التحميل:**
 
 - **محمّل بـ `--plugin-dir`:** شغّل Claude Code من دون `--plugin-dir ./session-handoff`. وإن كان مساره في `CLAUDE_CODE_PLUGIN_DIRS` فاحذفه من المتغير ثم ابدأ جلسة جديدة.
-- **مثبّت من سوق:** من داخل الجلسة افتح `/plugin`، واختر `session-handoff` من الإضافات المثبتة وعطّله. أو من الطرفية:
+- **مثبّت من GitHub:** افتح `/plugin` من داخل الجلسة، واختر `session-handoff` من الإضافات المثبتة وعطّله. أو من سطر الأوامر:
 
   ```bash
-  claude plugin disable session-handoff@<marketplace>
-  claude plugin enable session-handoff@<marketplace>     # لإعادة التفعيل
-  claude plugin uninstall session-handoff@<marketplace>  # للإزالة نهائيًا
+  claude plugin disable session-handoff@site-model
+  claude plugin enable session-handoff@site-model     # لإعادة التفعيل
+  claude plugin uninstall session-handoff@site-model  # للإزالة نهائيًا
   ```
 
-  و`claude plugin disable --all` يعطّل كل الإضافات المثبتة دفعة واحدة.
+  الأمر `disable` يكتب `"session-handoff@site-model": false` تحت `enabledPlugins` في `~/.claude/settings.json`، ويمكنك كتابة ذلك بيدك أيضًا. و`claude plugin disable --all` يعطّل كل الإضافات المثبتة دفعة واحدة.
 - **في الجلسة السحابية التي بُني فيها:** احذف مجلده من مجلد الـ Mods الخاص بالجلسة (`~/.claude/dev-mods/<الجلسة>/session-handoff`)، أو أنهِ الجلسة، فالحاوية مؤقتة.
 
 إن بقيت hooks الـ Mod تعمل في الجلسة المفتوحة بعد التعطيل، شغّل `/reload-plugins` أو ابدأ جلسة جديدة. لا يغيّر الـ Mod شيئًا خارج جلسته وملف تخزينه الخاص (سجلّا الإرسال والاستقبال)، فتعطيله يعيد سلوك Claude Code الأصلي كما كان.
