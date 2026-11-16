@@ -26,12 +26,29 @@ claude plugin test ./session-handoff       # الاختبارات
 
 ملف DXF وبيانات النموذج المولّدة منه **ما تنحفظ في المستودع** (`viewer/public/model.json` مستثنى في `.gitignore`)، لأن المستودع عام.
 
+المتطلبات: Node.js 18 أو أحدث (جُرّب على 22)، وPython 3.9 أو أحدث مع `ezdxf` (جُرّب على 1.4.5).
+
+### تجربة سريعة بملف تجريبي
+
+ما عندك ملف DXF؟ `tools/make_sample_dxf.py` يولّد مخططاً وهمياً صغيراً فيه نفس الطبقات (41 كتلة سكنية، و3 مبانٍ عامة برموز MOSQ وSCH وCLN، وطرق، وحديقة مظللة):
+
+```bash
+pip install ezdxf
+python3 tools/make_sample_dxf.py /tmp/sample.dxf
+python3 tools/dxf_to_model.py /tmp/sample.dxf viewer/public/model.json "Sample site"
+cd viewer && npm ci && npm run dev      # افتح http://localhost:5173
+```
+
+### مع ملف المشروع الحقيقي
+
 ```bash
 pip install ezdxf
 python3 tools/dxf_to_model.py MASTER_PLAN.dxf viewer/public/model.json "اسم المشروع"   # استخراج النموذج من DXF
-cd viewer && npm install
+cd viewer && npm ci
 npm run dev                                                               # تشغيل محلي
 npm run standalone -- public/model.json ../site.html                      # ملف HTML واحد فيه النموذج
 ```
 
 الطبقات المتوقعة في DXF: `3D-HOUSES` و`3D-PUBLIC` (polyface mesh)، و`3D-FLOOR-LINE` و`blocks` و`A-DETL` (خطوط)، وتظليل SOLID على `blocks`.
+
+أوامر أخرى داخل `viewer/`: `npm run build` يبني نسخة للنشر في `dist/` (يشمل فحص TypeScript)، و`npm run preview` يعرض هذي النسخة على http://localhost:4173. ملف `standalone` يشتغل بدون خادم لكنه يحمّل الخط من Google Fonts، فبدون إنترنت يظهر بخط النظام.

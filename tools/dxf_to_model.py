@@ -8,7 +8,7 @@ Output (Y-up, metres, centred on the site):
   fills:   [[x, z, ...] closed outlines of solid hatches]
   labels:  [{"t": text, "x": x, "z": z, "h": height}]
 """
-import json, math, sys
+import json, os, sys
 import ezdxf
 from ezdxf import bbox, path
 
@@ -56,8 +56,8 @@ def main(src, dst, name=""):
 
     lines = {}
     for e in msp:
-        name = LINE_LAYERS.get(e.dxf.layer)
-        if not name or e.dxftype() not in {"LINE", "LWPOLYLINE", "ARC", "CIRCLE"}:
+        kind = LINE_LAYERS.get(e.dxf.layer)
+        if not kind or e.dxftype() not in {"LINE", "LWPOLYLINE", "ARC", "CIRCLE"}:
             continue
         p = path.make_path(e)
         pts = list(p.flattening(0.25))
@@ -66,7 +66,7 @@ def main(src, dst, name=""):
         xs, ys = [q.x for q in pts], [q.y for q in pts]
         if max(xs) - min(xs) > max_span or max(ys) - min(ys) > max_span or not inside(xs[0], ys[0]):
             continue
-        lines.setdefault(name, []).append([c for q in pts for c in xz(q.x, q.y)])
+        lines.setdefault(kind, []).append([c for q in pts for c in xz(q.x, q.y)])
 
     fills = []
     for h in msp.query("HATCH"):
@@ -88,7 +88,8 @@ def main(src, dst, name=""):
 
     out = {"name": name, "units": "m", "size": [round(site.size.x, 1), round(site.size.y, 1)],
            "meshes": meshes, "lines": lines, "fills": fills, "labels": labels}
-    with open(dst, "w") as f:
+    os.makedirs(os.path.dirname(os.path.abspath(dst)), exist_ok=True)
+    with open(dst, "w", encoding="utf-8") as f:
         json.dump(out, f, separators=(",", ":"))
     print(f"houses={len(meshes.get('3D-HOUSES', {}).get('items', []))} public={len(meshes.get('3D-PUBLIC', {}).get('items', []))} "
           f"lines={ {k: len(v) for k, v in lines.items()} } fills={len(fills)} labels={len(labels)}")
