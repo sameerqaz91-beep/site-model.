@@ -2,7 +2,7 @@
 __pycache__/
 *.py[cod]
 
-# Node / TypeScript (session-handoff)
+# Node / TypeScript (viewer)
 node_modules/
 dist/
 *.tsbuildinfo
