@@ -14,8 +14,9 @@ Builds, in the open Revit project:
 
 How to run (Revit 2022 or newer):
   Manage > Dynamo > New > add a "Python Script" node > paste this file >
-  set the node engine to CPython3 > connect a "File Path" node pointing to
-  GPS.dwg into IN[0] (optional) > Run.
+  set the node engine to CPython3 (PythonNet3 on Revit 2025+) > connect a
+  "File Path" node pointing to GPS.dwg into IN[0] (optional) > Run.
+  Full steps and troubleshooting: revit/README.md
 
 All sizes below are in METERS. Change them, then run again on a fresh project.
 """
