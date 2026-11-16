@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Node / TypeScript (viewer)
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Dynamo / Revit local files
+*.dyn.bak
+*.rvt.bak
+*.[0-9][0-9][0-9][0-9].rvt
+*.[0-9][0-9][0-9][0-9].rfa
+backup/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
