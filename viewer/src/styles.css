@@ -1,18 +1,29 @@
 /* Layout: full-bleed 3D site on a drafting-sheet ground, one floating panel at the reading edge (right, RTL); bottom sheet on phones. */
 :root {
-  --bg: #e7ebed;
-  --ground: #dde3e6;
+  --bg: #dfe6ea;
+  --ground: #e4d7bd;
   --panel: #f8f9f9;
   --ink: #17222b;
   --muted: #5a6873;
   --rule: #cdd5da;
-  --house: #d8c29c;
-  --public: #4d7d8c;
+  --house: #efe8da;
+  --public: #c9a77a;
   --plan: #8d9aa3;
   --detail: #6f8592;
   --fill: #cfd8d2;
-  --edge: #6b6153;
+  --edge: #7d7366;
   --pick: #e0782c;
+  --mesh3: #a9b3bc;
+  --mesh4: #d8ccb4;
+  --mesh5: #c9a0a0;
+  --tree: #5f8f4e;
+  --asphalt: #5d6166;
+  --paving: #d9d2c5;
+  --grass: #7fa65a;
+  --track: #b5654a;
+  --court: #6f9a8a;
+  --wall: #e6dfd2;
+  --glass: #2f5566;
   --font-ui: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
@@ -20,12 +31,16 @@
   :root:not([data-theme="light"]) {
     --bg: #0e151a; --ground: #121b21; --panel: #172128; --ink: #e2e8ec; --muted: #8b9aa5; --rule: #26343e;
     --house: #a99372; --public: #5f9cad; --plan: #3e4d57; --detail: #557080; --fill: #1a2a26; --edge: #2c261e; --pick: #f19447;
+    --mesh3: #8a7a99; --mesh4: #6c8a68; --mesh5: #9a7373; --tree: #4f7a40;
+    --asphalt: #2a2e33; --paving: #4a4740; --grass: #3f5a33; --track: #6e3d2f; --court: #3c5a50; --wall: #77705f; --glass: #1d3640;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0e151a; --ground: #121b21; --panel: #172128; --ink: #e2e8ec; --muted: #8b9aa5; --rule: #26343e;
   --house: #a99372; --public: #5f9cad; --plan: #3e4d57; --detail: #557080; --fill: #1a2a26; --edge: #2c261e; --pick: #f19447;
+  --mesh3: #8a7a99; --mesh4: #6c8a68; --mesh5: #9a7373; --tree: #4f7a40;
+  --asphalt: #2a2e33; --paving: #4a4740; --grass: #3f5a33; --track: #6e3d2f; --court: #3c5a50; --wall: #77705f; --glass: #1d3640;
   color-scheme: dark;
 }
 
@@ -71,13 +86,14 @@ h2 { margin: 4px 0 8px; font-size: 16px; font-weight: 600; display: flex; align-
 .facts { margin: 0; display: grid; gap: 6px; }
 .facts > div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed var(--rule); padding-bottom: 5px; }
 .facts dd { margin: 0; font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.note { border-inline-start: 3px solid var(--pick); padding-inline-start: 8px; }
+.chip-trees { background: var(--tree); }
+.chip-surfaces { background: var(--asphalt); }
 .hint { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
 .code { font-family: var(--font-data); font-size: 12px; background: var(--public); color: #fff; padding: 1px 7px; border-radius: 4px; }
 .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-.swatch.house { background: var(--house); }
-.swatch.public { background: var(--public); }
 
-.views { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.views { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .btn, .icon-btn {
   font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--rule); border-radius: 6px;
   padding: 7px 12px; cursor: pointer; text-align: center;
@@ -93,19 +109,19 @@ h2 { margin: 4px 0 8px; font-size: 16px; font-weight: 600; display: flex; align-
 .layer-name { min-width: 0; }
 .layer-src { font-family: var(--font-data); font-size: 10.5px; color: var(--muted); }
 .chip { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--rule); }
-.chip-houses { background: var(--house); }
-.chip-publics { background: var(--public); }
 .chip-floors { background: var(--edge); }
 .chip-plan { background: var(--plan); }
 .chip-details { background: var(--detail); }
 .chip-fills { background: var(--fill); }
 .chip-codes { background: var(--panel); }
+.chip-names { background: var(--panel); border-style: dashed; }
 
 .tag {
   font-family: var(--font-data); font-size: 11px; font-weight: 500; white-space: nowrap;
   color: var(--ink); background: color-mix(in srgb, var(--panel) 86%, transparent);
   border: 1px solid var(--rule); padding: 0 5px; border-radius: 3px;
 }
+.tag-name { font-family: var(--font-ui); font-size: 12px; font-weight: 600; }
 .tag-district { font-size: 12px; background: var(--public); color: #fff; border-color: transparent; }
 
 @media (max-width: 640px) {

@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useState } from "react";
-import { buildModel, type Building, type Model, type RawModel } from "./model";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { buildModel, DEFAULT_FLOOR_HEIGHT, type Building, type Model, type RawModel } from "./model";
 import { Scene, type Layers, type Palette, type ViewName } from "./Scene";
 
-const LAYER_LABELS: [keyof Layers, string, string][] = [
-  ["houses", "الكتل السكنية", "3D-HOUSES"],
-  ["publics", "المباني العامة", "3D-PUBLIC"],
-  ["floors", "خط السقف الأول", "3D-FLOOR-LINE · +3.5 م"],
-  ["plan", "الطرق وحدود القطع", "blocks"],
-  ["details", "تفاصيل المباني العامة", "A-DETL"],
-  ["fills", "المساحات المظللة", "HATCH"],
-  ["codes", "رموز المباني والأحياء", "TEXT"],
+// Layers other than the building groups, with whether the loaded model has anything on them.
+const OTHER_LAYERS: [string, string, string, (m: Model) => boolean][] = [
+  ["floors", "خط السقف الأول", "3D-FLOOR-LINE", (m) => !!m.lines.floors],
+  ["plan", "الطرق وحدود القطع", "roads · plots", (m) => !!m.lines.plan],
+  ["details", "الأسوار والتفاصيل", "fences · details", (m) => !!m.lines.details],
+  ["fills", "المساحات المظللة", "HATCH", (m) => !!m.fills],
+  ["surfaces", "الأسفلت والأرصفة والملاعب", "surfaces", (m) => Object.keys(m.surfaces).length > 0],
+  ["trees", "الأشجار", "trees", (m) => m.trees.length > 0],
+  ["codes", "أرقام ورموز المباني", "TEXT", (m) => m.codes.length > 0],
+  ["names", "أسماء الأماكن", "TEXT", (m) => m.names.length > 0],
 ];
 
 const fmt = (n: number, digits = 0) => n.toLocaleString("ar-SA-u-nu-latn", { maximumFractionDigits: digits });
@@ -20,8 +22,11 @@ function usePalette(): Palette {
     const s = getComputedStyle(document.documentElement);
     const v = (n: string) => s.getPropertyValue(n).trim() || "#888";
     return {
-      sky: v("--bg"), ground: v("--ground"), house: v("--house"), public: v("--public"),
-      line: v("--plan"), detail: v("--detail"), fill: v("--fill"), edge: v("--edge"), pick: v("--pick"),
+      sky: v("--bg"), ground: v("--ground"), meshes: [v("--house"), v("--public"), v("--mesh3"), v("--mesh4"), v("--mesh5")],
+      line: v("--plan"), detail: v("--detail"), fill: v("--fill"), edge: v("--edge"), pick: v("--pick"), tree: v("--tree"),
+      asphalt: v("--asphalt"), paving: v("--paving"), grass: v("--grass"), track: v("--track"), court: v("--court"),
+      wall: v("--wall"), glass: v("--glass"),
+      dark: s.getPropertyValue("color-scheme").trim() === "dark",
     };
   };
   const [p, setP] = useState(read);
@@ -43,9 +48,24 @@ export function App() {
   const [view, setView] = useState<{ name: ViewName; seq: number }>({ name: "perspective", seq: 0 });
   // On phones the panel starts folded so the site is visible first.
   const [panelOpen, setPanelOpen] = useState(() => window.innerWidth > 640);
-  const [layers, setLayers] = useState<Layers>({
-    houses: true, publics: true, floors: true, plan: true, details: true, fills: true, codes: true,
-  });
+  const [layers, setLayers] = useState<Layers>({}); // a layer is on unless set to false
+  // How much of the canvas the panel covers, so the camera can frame the site beside it.
+  const panelRef = useRef<HTMLElement>(null);
+  const [inset, setInset] = useState({ right: 0, bottom: 0 });
+  useLayoutEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+    const measure = () => {
+      const phone = window.innerWidth <= 640;
+      const r = el.getBoundingClientRect();
+      setInset(phone ? { right: 0, bottom: Math.round(r.height) } : { right: Math.round(window.innerWidth - r.left), bottom: 0 });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener("resize", measure);
+    return () => { ro.disconnect(); window.removeEventListener("resize", measure); };
+  }, []);
   const palette = usePalette();
 
   const load = useCallback((raw: RawModel) => {
@@ -76,7 +96,7 @@ export function App() {
     >
       <div className="stage">
         {model ? (
-          <Scene model={model} layers={layers} palette={palette} selected={selected} onSelect={setSelected} view={view} />
+          <Scene model={model} layers={layers} palette={palette} selected={selected} onSelect={setSelected} view={view} inset={inset} />
         ) : (
           <div className="empty">
             {error ? (
@@ -95,7 +115,7 @@ export function App() {
         )}
       </div>
 
-      <aside className={panelOpen ? "panel" : "panel closed"}>
+      <aside ref={panelRef} className={panelOpen ? "panel" : "panel closed"}>
         <header className="panel-head">
           <div>
             <p className="eyebrow">{model?.name || "مخطط عام من ملف DXF"}</p>
@@ -110,11 +130,15 @@ export function App() {
           <div className="panel-body">
             {model && (
               <dl className="stats">
-                <div><dt>كتل سكنية</dt><dd>{fmt(model.stats.houses)}</dd></div>
-                <div><dt>مبانٍ عامة</dt><dd>{fmt(model.stats.publics)}</dd></div>
-                <div><dt>مسطح الكتل السكنية</dt><dd>{fmt(model.stats.houseArea / 10000, 1)}<small> هكتار</small></dd></div>
+                {model.stats.groups.map((g) => (
+                  <div key={g.kind}><dt>{g.label}</dt><dd>{fmt(g.count)}</dd></div>
+                ))}
+                <div><dt>مسطح البناء</dt><dd>{fmt(model.stats.builtArea)}<small> م²</small></dd></div>
                 <div><dt>أبعاد الموقع</dt><dd dir="ltr">{fmt(model.size[0])}×{fmt(model.size[1])}<small> m</small></dd></div>
               </dl>
+            )}
+            {model?.assumedHeights && (
+              <p className="hint note">المخطط ثنائي الأبعاد: المباني محسوبة بعدد أدوارها (3.5 م للدور)، والمظلات والكبائن بارتفاع مفترض.</p>
             )}
 
             <section className="selection" aria-live="polite">
@@ -122,16 +146,17 @@ export function App() {
                 <>
                   <p className="eyebrow">المبنى المحدد</p>
                   <h2>
-                    <span className={selected.kind === "house" ? "swatch house" : "swatch public"} />
-                    {selected.kind === "house" ? "كتلة سكنية" : "مبنى عام"}
+                    <span className="swatch" style={{ background: palette.meshes[model?.groups.find((g) => g.kind === selected.kind)?.colorIndex ?? 0] }} />
+                    {selected.label}
                     {selected.code && <span className="code" dir="ltr">{selected.code}</span>}
                   </h2>
                   <dl className="facts">
                     <div><dt>مساحة البصمة</dt><dd>{fmt(selected.area)} م²</dd></div>
-                    <div><dt>الارتفاع في النموذج</dt><dd>{fmt(selected.height, 1)} م</dd></div>
+                    {selected.floors > 0 && <div><dt>عدد الأدوار</dt><dd>{fmt(selected.floors)}</dd></div>}
+                    <div><dt>{model?.assumedHeights && selected.floors === 0 ? "الارتفاع (مفترض)" : "الارتفاع"}</dt><dd>{fmt(selected.height, 1)} م</dd></div>
                     <div><dt>الإحداثي من المركز</dt><dd dir="ltr">{fmt(selected.center.x)}, {fmt(-selected.center.z)}</dd></div>
                   </dl>
-                  {selected.code && <p className="hint">الرمز مأخوذ من أقرب نص في المخطط للمبنى.</p>}
+                  {selected.code && <p className="hint">الرقم مأخوذ من أقرب نص في المخطط للمبنى.</p>}
                 </>
               ) : (
                 <p className="hint">اضغط على أي مبنى عشان تشوف مساحته وارتفاعه. اسحب للتحريك، وكبّر بعجلة الماوس أو بإصبعين.</p>
@@ -141,16 +166,23 @@ export function App() {
             <div className="views" role="group" aria-label="زاوية العرض">
               <button className="btn" onClick={() => go("perspective")}>منظور</button>
               <button className="btn" onClick={() => go("top")}>من فوق</button>
+              <button className="btn" onClick={() => go("close")}>لقطة قريبة</button>
             </div>
 
             <fieldset className="layers">
               <legend className="eyebrow">الطبقات</legend>
-              {LAYER_LABELS.map(([key, label, src]) => (
+              {model && [
+                ...model.groups.map((g) => [`g:${g.kind}`, g.label, g.kind, g.colorIndex] as const),
+                ...OTHER_LAYERS.filter(([, , , has]) => has(model)).map(([k, label, src]) => [k, label, src, -1] as const),
+              ].map(([key, label, src, colorIndex]) => (
                 <label key={key} className="layer">
-                  <input id={`layer-${key}`} type="checkbox" checked={layers[key]} onChange={(e) => setLayers((l) => ({ ...l, [key]: e.target.checked }))} />
-                  <span className={`chip chip-${key}`} />
+                  <input id={`layer-${key}`} type="checkbox" checked={layers[key] !== false} onChange={(e) => setLayers((l) => ({ ...l, [key]: e.target.checked }))} />
+                  <span className={`chip chip-${key}`} style={colorIndex >= 0 ? { background: palette.meshes[colorIndex] } : undefined} />
                   <span className="layer-name">{label}</span>
-                  <span className="layer-src" dir="ltr">{src}</span>
+                  <span className="layer-src" dir="ltr">
+                    {src}
+                    {key === "floors" && ` · +${fmt(model?.floorHeight ?? DEFAULT_FLOOR_HEIGHT, 1)} m`}
+                  </span>
                 </label>
               ))}
             </fieldset>
