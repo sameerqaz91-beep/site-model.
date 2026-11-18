@@ -2,7 +2,7 @@
 
 ## revit
 
-[`revit/villa_from_gps.py`](revit/villa_from_gps.py) سكربت Python لعقدة Dynamo داخل Revit، يبني نموذج فيلا مبدئياً (مستويات، شبكات، جدران، بلاطات، أبواب ونوافذ، مناظير، ولوحة) ويربط ملف الموقع `GPS.dwg`. خطوات التشغيل وحل المشاكل في [`revit/README.md`](revit/README.md).
+[`revit/`](revit/) يبني نموذج Revit للموقع من مخطط DXF مرسوم بإحداثيات GPS (UTM): الأرض من المناسيب، والمباني، والأسفلت والأرصفة، والأسوار، والأشجار، والمناظير، واللوحات، على الإحداثيات الحقيقية. `site_to_revit.py` يستخرج بيانات الموقع من الـ DXF، و `build_site.py` يبنيها داخل Revit عن طريق Dynamo. الخطوات في [`revit/README.md`](revit/README.md).
 
 ## session-handoff
 

@@ -19,3 +19,9 @@ backup/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Site drawings and models made from them are private (this repository is public)
+*.dwg
+*.dxf
+revit/out/
+revit/*.json
