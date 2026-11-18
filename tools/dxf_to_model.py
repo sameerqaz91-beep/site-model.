@@ -3,6 +3,7 @@
 Usage: python3 tools/dxf_to_model.py MASTER_PLAN.dxf viewer/public/model.json ["Project name"]
 
 Output (Y-up, metres, centred on the site):
+  origin:  [x, y] DXF coordinates of the scene centre
   meshes:  {layer: {"positions": [...], "indices": [...], "items": [[firstIndex, count, height, area], ...]}}
   lines:   {layer: [[x, z, x, z, ...] polylines on the ground]}
   fills:   [[x, z, ...] closed outlines of solid hatches]
@@ -16,7 +17,7 @@ MESH_LAYERS = {"3D-HOUSES", "3D-PUBLIC"}
 LINE_LAYERS = {"blocks": "plan", "A-DETL": "details", "3D-FLOOR-LINE": "floors"}
 
 
-def main(src, dst, name=""):
+def main(src, dst, project=""):
     doc = ezdxf.readfile(src)
     msp = doc.modelspace()
 
@@ -86,7 +87,7 @@ def main(src, dst, name=""):
             continue
         labels.append({"t": text, "x": xz(x, y)[0], "z": xz(x, y)[1], "h": round(t.dxf.height, 2)})
 
-    out = {"name": name, "units": "m", "size": [round(site.size.x, 1), round(site.size.y, 1)],
+    out = {"name": project, "units": "m", "origin": [round(cx, 3), round(cy, 3)], "size": [round(site.size.x, 1), round(site.size.y, 1)],
            "meshes": meshes, "lines": lines, "fills": fills, "labels": labels}
     with open(dst, "w") as f:
         json.dump(out, f, separators=(",", ":"))

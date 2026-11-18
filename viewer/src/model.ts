@@ -8,6 +8,7 @@ export interface RawMesh {
 }
 export interface RawModel {
   name?: string;
+  origin?: [number, number];
   units: string;
   size: [number, number];
   meshes: Record<string, RawMesh>;
@@ -38,6 +39,7 @@ export interface Group {
 
 export interface Model {
   name: string;
+  origin: [number, number];
   size: [number, number];
   groups: Group[];
   lines: Record<string, THREE.BufferGeometry>;
@@ -113,6 +115,7 @@ export function buildModel(raw: RawModel): Model {
   const publics = sum("public");
   return {
     name: raw.name ?? "",
+    origin: raw.origin ?? [0, 0],
     size: raw.size,
     groups,
     lines,
