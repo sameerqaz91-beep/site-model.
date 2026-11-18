@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Node / TypeScript (session-handoff)
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Dynamo / Revit local files
+*.dyn.bak
+*.rvt.bak
+*.[0-9][0-9][0-9][0-9].rvt
+*.[0-9][0-9][0-9][0-9].rfa
+backup/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Site drawings and models made from them are private (this repository is public)
+*.dwg
+*.dxf
+revit/out/
+revit/*.json
