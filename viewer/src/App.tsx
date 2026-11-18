@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { buildModel, type Building, type Model, type RawModel } from "./model";
 import { Scene, type Focus, type Layers, type Palette, type ViewName } from "./Scene";
@@ -143,7 +143,13 @@ export function App() {
     flyTo(places[i % places.length], 220);
   };
 
-  const flash = (msg: string) => { setCopied(msg); setTimeout(() => setCopied(null), 2200); };
+  // One toast at a time: a new message restarts the timer instead of being cut short by the old one.
+  const flashTimer = useRef<number>();
+  const flash = (msg: string) => {
+    setCopied(msg);
+    window.clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => setCopied(null), 2200);
+  };
 
   const dxfPoint = (x: number, z: number) =>
     model ? [model.origin[0] + x, model.origin[1] - z].map((n) => n.toFixed(2)).join(", ") : "";
@@ -260,7 +266,7 @@ export function App() {
                       </div>
                       <div className="row-btns">
                         <button className="btn btn-small" onClick={() => setPlacing(true)}>انقلها</button>
-                        <button className="btn btn-small" onClick={() => copyText(`${facility.name}: ${dxfPoint(placement.x, placement.z)} · ${placement.rot}°`).then((ok) => flash(ok ? "انسخ الإحداثي" : "ما قدرت أنسخ، انسخه من الخانة يدوياً"))}>نسخ الإحداثي</button>
+                        <button className="btn btn-small" onClick={() => copyText(`${facility.name}: ${dxfPoint(placement.x, placement.z)} · ${placement.rot}°`).then((ok) => flash(ok ? "انتسخ الإحداثي" : "ما قدرت أنسخ، انسخه من الخانة يدوياً"))}>نسخ الإحداثي</button>
                         <button className="btn btn-small btn-quiet" onClick={() => { savePlacement(null); setFacilitySelected(false); }}>شيلها</button>
                       </div>
                     </>
@@ -298,7 +304,7 @@ export function App() {
                     ))}
                   </ul>
                   {Object.keys(meanings).length > 0 && (
-                    <button className="btn btn-small" onClick={() => copyText(codeList.map(([c]) => `${c}: ${meanings[c] ?? "—"}`).join("\n")).then((ok) => flash(ok ? "انسخت قائمة الرموز" : "ما قدرت أنسخ"))}>
+                    <button className="btn btn-small" onClick={() => copyText(codeList.map(([c]) => `${c}: ${meanings[c] ?? "—"}`).join("\n")).then((ok) => flash(ok ? "انتسخت قائمة الرموز" : "ما قدرت أنسخ"))}>
                       نسخ القائمة
                     </button>
                   )}
@@ -330,13 +336,13 @@ export function App() {
 function FacilityDetails({ spec }: { spec: FacilitySpec }) {
   return (
     <>
-      <p className="eyebrow">{spec.source ?? "مبنى مضاف"}</p>
-      <h2><span className="swatch facility" />{spec.name}</h2>
+      <p className="eyebrow" dir="auto">{spec.source ?? "مبنى مضاف"}</p>
+      <h2><span className="swatch facility" /><span dir="auto">{spec.name}</span></h2>
       {spec.summary && (
         <ul className="checks">
           {spec.summary.map(([label, value, status]) => (
             <li key={label} className={`check-${status ?? "ok"}`}>
-              <span className="check-label">{label}</span>
+              <span className="check-label" dir="auto">{label}</span>
               <span className="check-value" dir="ltr">{value}</span>
               {status && <span className="pill">{STATUS_TEXT[status]}</span>}
             </li>
@@ -345,11 +351,11 @@ function FacilityDetails({ spec }: { spec: FacilitySpec }) {
       )}
       <dl className="facts">
         {spec.equipment.map(([label, value]) => (
-          <div key={label}><dt>{label}</dt><dd dir="ltr">{value}</dd></div>
+          <div key={label}><dt dir="auto">{label}</dt><dd dir="ltr">{value}</dd></div>
         ))}
       </dl>
-      {spec.warnings?.map((w) => <p key={w} className="warning">{w}</p>)}
-      {spec.sizeNote && <p className="hint">{spec.sizeNote}</p>}
+      {spec.warnings?.map((w) => <p key={w} className="warning" dir="auto">{w}</p>)}
+      {spec.sizeNote && <p className="hint" dir="auto">{spec.sizeNote}</p>}
     </>
   );
 }

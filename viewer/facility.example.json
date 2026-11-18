@@ -11,7 +11,8 @@
   ],
   "summary": [
     ["Normal running", "248 A · 163 kVA", "ok"],
-    ["Main breaker carries locked-rotor current", "1,154 A needed", "fail"]
+    ["Main breaker carries locked-rotor current", "1,154 A needed", "fail"],
+    ["Transformer capacity for the added load", "Not confirmed", "check"]
   ],
   "warnings": ["Feed the fire pump ahead of the main breaker."]
 }
