@@ -1,0 +1,12 @@
+{
+  "name": "site-model",
+  "description": "Claude Code mods kept in this repository.",
+  "owner": { "name": "sameerqaz91-beep" },
+  "plugins": [
+    {
+      "name": "session-handoff",
+      "source": "./session-handoff",
+      "description": "Hand work off to another Claude session: pick the receiving session, review a six-part brief, then send it. Secrets redacted; duplicates and auto-reply loops blocked."
+    }
+  ]
+}
