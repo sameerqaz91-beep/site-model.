@@ -1,0 +1,18 @@
+{
+  "name": "Pump room",
+  "source": "Single line diagram reference",
+  "footprint": [14, 9],
+  "height": 4.5,
+  "sizeNote": "Size is assumed; replace with the architectural layout.",
+  "annex": { "name": "Transformer", "footprint": [3, 2.5], "height": 2.5 },
+  "equipment": [
+    ["Fire pump (electric)", "125 HP · 189 A"],
+    ["Jockey pump", "4 kW · 8 A"]
+  ],
+  "summary": [
+    ["Normal running", "248 A · 163 kVA", "ok"],
+    ["Main breaker carries locked-rotor current", "1,154 A needed", "fail"],
+    ["Transformer capacity for the added load", "Not confirmed", "check"]
+  ],
+  "warnings": ["Feed the fire pump ahead of the main breaker."]
+}

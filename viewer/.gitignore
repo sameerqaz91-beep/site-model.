@@ -1,0 +1,8 @@
+node_modules
+dist
+# Model data is generated from the DXF and kept out of this public repo.
+public/model.json
+public/facility.json
+dist-single
+standalone.html
+tsconfig.tsbuildinfo
